@@ -4,8 +4,8 @@
 
 This is the OTP Simple Pamyent SDK. 
 
-Version: 1.0
+Version: 1.0.7
 
-You can find more info: http://simplepartner.hu/online_fizetesi_szolgaltatas.html
+You can find more info: https://www.simplepay.hu/fejlesztoknek
 
 

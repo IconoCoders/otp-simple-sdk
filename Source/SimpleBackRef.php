@@ -50,11 +50,11 @@ class SimpleBackRef extends SimpleTransaction
     public $protocol;
     protected $request;
     protected $returnVars = array(
-        "RC", 
-        "RT", 
-        "3dsecure", 
-        "date", 
-        "payrefno", 
+        "RC",
+        "RT",
+        "3dsecure",
+        "date",
+        "payrefno",
         "ctrl"
     );
     public $backStatusArray = array(
@@ -64,22 +64,23 @@ class SimpleBackRef extends SimpleTransaction
         'ORDER_STATUS' => 'N/A',
         'PAYMETHOD' => 'N/A',
         'RESULT' => false
-    ); 
+    );
     public $successfulStatus = array(
         "IN_PROGRESS",          //card authorized on backref
         "PAYMENT_AUTHORIZED",   //IPN
         "COMPLETE",             //IDN
         "WAITING_PAYMENT",      //waiting for WIRE 
     );
-    public  $unsuccessfulStatus = array(
-        "CARD_NOTAUTHORIZED",   //unsuccessful transaction 
+    public $unsuccessfulStatus = array(
+        "CARD_NOTAUTHORIZED",   //unsuccessful transaction
         "FRAUD",
-        "TEST"
+        "TEST",
+        "TIMEOUT"
     );
-    
+
     /**
      * Constructor of SimpleBackRef class
-     * 
+     *
      * @param array  $config   Configuration array or filename
      * @param string $currency Transaction currency
      *
@@ -97,13 +98,13 @@ class SimpleBackRef extends SimpleTransaction
         $this->createRequestUri();
         $this->backStatusArray['BACKREF_DATE'] = (isset($this->getData['date'])) ? $this->getData['date'] : 'N/A';
         $this->backStatusArray['REFNOEXT'] = (isset($this->getData['order_ref'])) ? $this->getData['order_ref'] : 'N/A';
-        $this->backStatusArray['PAYREFNO'] = (isset($this->getData['payrefno'])) ? $this->getData['payrefno'] : 'N/A';           
+        $this->backStatusArray['PAYREFNO'] = (isset($this->getData['payrefno'])) ? $this->getData['payrefno'] : 'N/A';
     }
-   
+
     /**
      * Creates request URI from HTTP SERVER VARS.
      * Handles http and https
-     * 
+     *
      * @return void
      *
      */
@@ -113,9 +114,9 @@ class SimpleBackRef extends SimpleTransaction
             $this->protocol = "http";
         }
         $this->request = $this->protocol . '://' . $this->serverData['HTTP_HOST'] . $this->serverData['REQUEST_URI'];
-        $this->debugMessage[] = 'REQUEST: ' . $this->request;        
+        $this->debugMessage[] = 'REQUEST: ' . $this->request;
     }
-    
+
     /**
      * Validates CTRL variable
      *
@@ -125,7 +126,7 @@ class SimpleBackRef extends SimpleTransaction
     protected function checkCtrl()
     {
         $requestURL = substr($this->request, 0, -38); //the last 38 characters are the CTRL param
-        $hashInput = strlen($requestURL) . $requestURL;  
+        $hashInput = strlen($requestURL) . $requestURL;
         $this->debugMessage[] = 'REQUEST URL: ' . $requestURL;
         $this->debugMessage[] = 'GET ctrl: ' . @$this->getData['ctrl'];
         $this->debugMessage[] = 'Calculated ctrl: ' . $this->hmac($this->secretKey, $hashInput);
@@ -136,18 +137,18 @@ class SimpleBackRef extends SimpleTransaction
         $this->errorMessage[] = 'BACKREF ERROR: ' . @$this->getData['err'];
         return false;
     }
-    
+
     /**
      * Check card authorization response
      *
      * 1. check ctrl
-     * 2. check RC & RT 
+     * 2. check RC & RT
      * 3. check IOS status
-     * 
+     *
      * @return boolean
      *
      */
-    public function checkResponse() 
+    public function checkResponse()
     {
         if (!isset($this->order_ref)) {
             $this->errorMessage[] = 'CHECK RESPONSE: Missing order_ref variable!';
@@ -155,11 +156,11 @@ class SimpleBackRef extends SimpleTransaction
         }
         $this->logFunc("BackRef", $this->getData, $this->order_ref);
 
-        if (!$this->checkCtrl()) {    
+        if (!$this->checkCtrl()) {
             $this->errorMessage[] = 'CHECK RESPONSE: INVALID CTRL!';
             return false;
         }
-        
+
         $ios = new SimpleIos($this->iosConfig, $this->getData['order_currency'], $this->order_ref);
 
         foreach ($ios->errorMessage as $msg) {
@@ -169,10 +170,10 @@ class SimpleBackRef extends SimpleTransaction
             $this->debugMessage[] = $msg;
         }
 
-        if (is_object($ios)) {   
+        if (is_object($ios)) {
             $this->checkIOSStatus($ios);
         }
-        $this->logFunc("BackRef_BackStatus", $this->backStatusArray, $this->order_ref);       
+        $this->logFunc("BackRef_BackStatus", $this->backStatusArray, $this->order_ref);
         if (!$this->checkRtVariable($ios)) {
             return false;
         }
@@ -181,15 +182,15 @@ class SimpleBackRef extends SimpleTransaction
         }
         return true;
     }
-    
+
     /**
      * Check IOS result
-     * 
+     *
      * @param obj $ios Result of IOS comunication
      *
      * @return boolean
      *
-     */    
+     */
     protected function checkIOSStatus($ios)
     {
         $this->backStatusArray['ORDER_STATUS'] = (isset($ios->status['ORDER_STATUS'])) ? $ios->status['ORDER_STATUS'] : 'IOS_ERROR';
@@ -199,37 +200,58 @@ class SimpleBackRef extends SimpleTransaction
         } elseif (in_array(trim($ios->status['ORDER_STATUS']), $this->unsuccessfulStatus)) {
             $this->backStatusArray['RESULT'] = false;
             $this->errorMessage[] = 'IOS STATUS: UNSUCCESSFUL!';
-        }     
+        }
     }
 
     /**
      * Check RT variable
      *
      * @param obj $ios Result of IOS comunication
-     * 
+     *
      * @return boolean
      *
-     */    
+     */
     protected function checkRtVariable($ios)
     {
-        if (isset($this->getData['RT'])) {    
+        $successCode = array("000", "001");
+        if (isset($this->getData['RT'])) {
+            $returnCode = substr($this->getData['RT'], 0, 3);
+
             //000 and 001 are successful
-            if (in_array(substr($this->getData['RT'], 0, 3), array("000", "001"))) {
-                $this->backStatusArray['RESULT'] = true;         
+            if (in_array($returnCode, $successCode)) {
+                $this->backStatusArray['RESULT'] = true;
+                $this->debugMessage[] = 'Return code: ' . $returnCode;
+                return true;
+
+                //all other unsuccessful
+            } elseif ($this->getData['RT'] != "" && !in_array($returnCode, $successCode)) {
+                $this->backStatusArray['RESULT'] = false;
+                $this->errorMessage[] = 'Return code: ' . $returnCode;
+                return false;
+
+                //in case of WIRE we have no bank return code and return text value, so RT has to be empty
             } elseif ($this->getData['RT'] == "") {
                 //check IOS ORDER_STATUS
                 if (in_array(trim($ios->status['ORDER_STATUS']), $this->successfulStatus)) {
                     $this->backStatusArray['RESULT'] = true;
                     return true;
                 }
-            }                       
-        }        
-        if (!isset($this->getData['RT'])) {      
+                $this->backStatusArray['RESULT'] = false;
+                $this->errorMessage[] = 'Empty RT and status is: ' . $ios->status['ORDER_STATUS'];
+                return false;
+            }
             $this->backStatusArray['RESULT'] = false;
-            $this->errorMessage[] = 'Missing variables: (RT)!';
-            return false;             
-        }    
-        return true;
+            $this->errorMessage[] = 'RT content: failure!';
+            return false;
+
+        } elseif (!isset($this->getData['RT'])) {
+            $this->backStatusArray['RESULT'] = false;
+            $this->errorMessage[] = 'Missing variable: (RT)!';
+            return false;
+        }
+        $this->backStatusArray['RESULT'] = false;
+        $this->errorMessage[] = 'checkRtVariable: general error!';
+        return false;
     }
 }
 
