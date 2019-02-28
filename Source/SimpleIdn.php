@@ -55,7 +55,7 @@ class SimpleIdn extends SimpleTransaction
         "ORDER_CURRENCY",
         "IDN_DATE"
     );
-            
+
     protected $validFields = array(
         "MERCHANT" => array("type"=>"single", "paramName"=>"merchantId", "required" => true),
         "ORDER_REF" => array("type"=>"single", "paramName"=>"orderRef", "required"=>true),
@@ -67,7 +67,7 @@ class SimpleIdn extends SimpleTransaction
 
     /**
      * Constructor of SimpleIdn class
-     * 
+     *
      * @param mixed  $config   Configuration array or filename
      * @param string $currency Transaction currency
      *
@@ -87,7 +87,7 @@ class SimpleIdn extends SimpleTransaction
 
     /**
      * Creates associative array for the received data
-     * 
+     *
      * @param array $data Processed data
      *
      * @return void
@@ -103,10 +103,10 @@ class SimpleIdn extends SimpleTransaction
             "ORDER_HASH" => (isset($data[4])) ? $data[4] : 'N/A',
         );
     }
-    
+
     /**
      * Sends notification via cURL
-     * 
+     *
      * @param array $data Data array to be sent
      *
      * @return array $this->nameData() Result
@@ -117,28 +117,28 @@ class SimpleIdn extends SimpleTransaction
         if (count($data) == 0) {
             $this->errorMessage[] = 'IDN DATA: EMPTY';
             return $this->nameData();
-        }            
+        }
         $data['MERCHANT'] = $this->merchantId;
         $this->refnoext = $data['REFNOEXT'];
         unset($data['REFNOEXT']);
-        
+
         foreach ($this->hashFields as $fieldKey) {
             $data2[$fieldKey] = $data[$fieldKey];
-        }    
+        }
         $irnHash = $this->createHashString($data2);
         $data2['ORDER_HASH'] = $irnHash;
         $this->idnRequest = $data2;
         $this->logFunc("IDN", $this->idnRequest, $this->refnoext);
-        
+
         $result = $this->startRequest($this->targetUrl, $this->idnRequest, 'POST');
         $this->debugMessage[] = 'IDN RESULT: ' . $result;
-        
+
         if (is_string($result)) {
             $processed = $this->processResponse($result);
             $this->logFunc("IDN", $processed, $this->refnoext);
-            return     $processed;        
+            return     $processed;
         }
         $this->debugMessage[] = 'IDN RESULT: NOT STRING';
         return false;
-    }                                      
+    }
 }

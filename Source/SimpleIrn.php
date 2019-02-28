@@ -56,7 +56,7 @@ class SimpleIrn extends SimpleTransaction
         "IRN_DATE",
         "AMOUNT"
     );
-    
+
     protected $validFields = array(
         "MERCHANT" => array("type" => "single", "paramName" => "merchantId", "required" => true),
         "ORDER_REF" => array("type" => "single", "paramName" => "orderRef", "required" => true),
@@ -65,10 +65,10 @@ class SimpleIrn extends SimpleTransaction
         "ORDER_CURRENCY" => array("type" => "single", "paramName" => "currency", "required" => true),
         "IRN_DATE" => array("type" => "single", "paramName" => "irnDate", "required" => true),
     );
-        
+
     /**
      * Constructor of SimpleIrn class
-     * 
+     *
      * @param mixed  $config   Configuration array or filename
      * @param string $currency Transaction currency
      *
@@ -88,7 +88,7 @@ class SimpleIrn extends SimpleTransaction
 
     /**
      * Creates associative array for the received data
-     * 
+     *
      * @param array $data Processed data
      *
      * @return void
@@ -104,10 +104,10 @@ class SimpleIrn extends SimpleTransaction
             "ORDER_HASH" => (isset($data[4])) ? $data[4] : 'N/A',
         );
     }
-    
+
     /**
      * Sends notification via cURL
-     * 
+     *
      * @param array $data (Optional) Data array to be sent
      *
      * @return array $this->nameData() Result
@@ -118,28 +118,28 @@ class SimpleIrn extends SimpleTransaction
         if (count($data) == 0) {
             $this->errorMessage[] = 'IRN DATA: EMPTY';
             return $this->nameData();
-        }            
+        }
         $data['MERCHANT'] = $this->merchantId;
         $this->refnoext = $data['REFNOEXT'];
         unset($data['REFNOEXT']);
-        
+
         foreach ($this->hashFields as $fieldKey) {
             $data2[$fieldKey] = $data[$fieldKey];
-        }    
+        }
         $irnHash = $this->createHashString($data2);
         $data2['ORDER_HASH'] = $irnHash;
         $this->irnRequest = $data2;
         $this->logFunc("IRN", $this->irnRequest, $this->refnoext);
-        
+
         $result = $this->startRequest($this->targetUrl, $this->irnRequest, 'POST');
         $this->debugMessage[] = 'IRN RESULT: ' . $result;
-        
+
         if (is_string($result)) {
             $processed = $this->processResponse($result);
             $this->logFunc("IRN", $processed, $this->refnoext);
-            return $processed;        
+            return $processed;
         }
         $this->debugMessage[] = 'IRN RESULT: NOT STRING';
         return false;
-    }         
+    }
 }

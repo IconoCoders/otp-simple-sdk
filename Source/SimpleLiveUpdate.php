@@ -58,18 +58,18 @@ class SimpleLiveUpdate extends SimpleTransaction
         "ORDER_PINFO" => array("type" => "product", "paramName" => "info"),
         "ORDER_PRICE" => array("type" => "product", "paramName" => "price", "required" => true),
         "ORDER_QTY" => array("type" => "product", "paramName" => "qty", "required" => true),
-        "ORDER_VAT" => array("type" => "product", "default" => "0", "paramName" => "vat", "required" => true),         
+        "ORDER_VAT" => array("type" => "product", "default" => "0", "paramName" => "vat", "required" => true),
         "PRICES_CURRENCY" => array("type" => "single", "default" => "HUF", "required" => true),
-        "ORDER_SHIPPING" => array("type" => "single", "default" => "0"),           
-        "DISCOUNT" => array("type" => "single", "default" => "0"),            
+        "ORDER_SHIPPING" => array("type" => "single", "default" => "0"),
+        "DISCOUNT" => array("type" => "single", "default" => "0"),
         "PAY_METHOD" => array("type" => "single", "default" => "CCVISAMC", "required" => true),
-        "LANGUAGE" => array("type" => "single", "default" => "HU"),            
+        "LANGUAGE" => array("type" => "single", "default" => "HU"),
         "ORDER_TIMEOUT" => array("type" => "single", "default" => "300"),
         "TIMEOUT_URL" => array("type" => "single", "required" => true),
         "BACK_REF" => array("type" => "single", "required" => true),
         "LU_ENABLE_TOKEN" => array("type" => "single", "required" => false),
         "LU_TOKEN_TYPE" => array("type" => "single", "required" => false),
-        
+
         //billing
         "BILL_FNAME" => array("type" => "single", "required" => true),
         "BILL_LNAME" => array("type" => "single", "required" => true),
@@ -84,7 +84,7 @@ class SimpleLiveUpdate extends SimpleTransaction
         "BILL_CITY" => array("type" => "single", "required" => true),
         "BILL_STATE" => array("type" => "single", "required" => true),
         "BILL_COUNTRYCODE" => array("type" => "single", "required" => true),
-        
+
         //delivery
         "DELIVERY_FNAME" => array("type" => "single", "required" => true),
         "DELIVERY_LNAME" => array("type" => "single", "required" => true),
@@ -115,14 +115,14 @@ class SimpleLiveUpdate extends SimpleTransaction
         "DISCOUNT",
         "PAY_METHOD"
     );
-    
+
     /**
      * Constructor of SimpleLiveUpdate class
-     * 
+     *
      * @param array  $config   Configuration array or filename
      * @param string $currency Transaction currency
-     * 
-     * @return void 
+     *
+     * @return void
      *
      */
     public function __construct($config = array(), $currency = '')
@@ -137,13 +137,13 @@ class SimpleLiveUpdate extends SimpleTransaction
         $this->setField("ORDER_DATE", @date("Y-m-d H:i:s"));
         $this->fieldData['MERCHANT'] = $this->merchantId;
         $this->debugMessage[] = 'MERCHANT: ' . $this->fieldData['MERCHANT'];
-        $this->targetUrl = $this->luUrl;     
+        $this->targetUrl = $this->luUrl;
     }
 
-    
+
     /**
      * Generates a ready-to-insert HTML FORM
-     * 
+     *
      * @param string $formName          The ID parameter of the form
      * @param string $submitElement     The type of the submit element ('button' or 'link')
      * @param string $submitElementText The label for the submit element
@@ -152,71 +152,71 @@ class SimpleLiveUpdate extends SimpleTransaction
      *
      */
     public function createHtmlForm($formName = 'SimplePayForm', $submitElement = 'button', $submitElementText = 'Start Payment')
-    {  
+    {
         if (count($this->errorMessage) > 0) {
             return false;
-        }    
+        }
         if (!$this->prepareFields("ORDER_HASH")) {
             $this->errorMessage[] = 'HASH FIELD: Missing hash field name';
             return false;
         }
-        
+
         $logString = "";
-        $this->luForm = "\n<form action='" . $this->baseUrl . $this->targetUrl . "' method='POST' id='" . $formName . "' accept-charset='UTF-8'>"; 
-        foreach ($this->formData as $name => $field) {   
+        $this->luForm = "\n<form action='" . $this->baseUrl . $this->targetUrl . "' method='POST' id='" . $formName . "' accept-charset='UTF-8'>";
+        foreach ($this->formData as $name => $field) {
             if (is_array($field)) {
                 foreach ($field as $subField) {
                     $this->luForm .= $this->createHiddenField($name . "[]", $subField);
                     $logString .= $name . '=' . $subField . "\n";
                 }
-            } elseif (!is_array($field)) {         
+            } elseif (!is_array($field)) {
                 if ($name == "BACK_REF" or $name == "TIMEOUT_URL") {
                     $concat = '?';
                     if (strpos($field, '?') !== false) {
                         $concat = '&';
-                    }       
+                    }
                     $field .= $concat . 'order_ref=' . $this->fieldData['ORDER_REF'] . '&order_currency=' . $this->fieldData['PRICES_CURRENCY'];
                     $field = $this->protocol . '://' . $field;
-                }               
+                }
                 $this->luForm .= $this->createHiddenField($name, $field);
                 $logString .= $name . '=' . $field . "\n";
-            }           
-        }              
-        $this->luForm .= $this->createHiddenField("SDK_VERSION", $this->sdkVersion);   
-        $this->luForm .= $this->formSubmitElement($formName, $submitElement, $submitElementText);             
-        $this->luForm .= "\n</form>";   
-        $this->logFunc("LiveUpdate", $this->formData, $this->formData['ORDER_REF']);         
+            }
+        }
+        $this->luForm .= $this->createHiddenField("SDK_VERSION", $this->sdkVersion);
+        $this->luForm .= $this->formSubmitElement($formName, $submitElement, $submitElementText);
+        $this->luForm .= "\n</form>";
+        $this->logFunc("LiveUpdate", $this->formData, $this->formData['ORDER_REF']);
         $this->debugMessage[] = 'HASH CODE: ' . $this->hashCode;
         return $this->luForm;
     }
 
-    
+
     /**
      * Generates HTML submit element
-     * 
+     *
      * @param string $formName          The ID parameter of the form
      * @param string $submitElement     The type of the submit element ('button' or 'link')
      * @param string $submitElementText The lebel for the submit element
      *
      * @return string HTML submit
      *
-     */    
+     */
     protected function formSubmitElement($formName = '', $submitElement = 'button', $submitElementText = '')
     {
         switch ($submitElement) {
-        case 'link':
-            $element = "\n<a href='javascript:document.getElementById(\"" . $formName ."\").submit()'>".addslashes($submitElementText)."</a>";
-            break;
-        case 'button':
-            $element = "\n<button type='submit'>".addslashes($submitElementText)."</button>";
-            break;
-        case 'auto':
-            $element = "\n<button type='submit'>".addslashes($submitElementText)."</button>";
-            $element .= "\n<script language=\"javascript\" type=\"text/javascript\">document.getElementById(\"" . $formName . "\").submit();</script>";          
-            break;
-        default :
-            $element = "\n<button type='submit'>".addslashes($submitElementText)."</button>";
-            break;            
+            case 'link':
+                $element = "\n<a href='javascript:document.getElementById(\"" . $formName ."\").submit()'>" . addslashes($submitElementText) . "</a>";
+                break;
+            case 'button':
+                $element = "\n<button type='submit'>" . addslashes($submitElementText) . "</button>";
+                break;
+            case 'auto':
+                $element = "\n<button type='submit'>" . addslashes($submitElementText) . "</button>";
+                $element .= "\n<script language=\"javascript\" type=\"text/javascript\">document.getElementById(\"" . $formName . "\").submit();</script>";
+                break;
+            default :
+                $element = "\n<button type='submit'>" . addslashes($submitElementText) . "</button>";
+                break;
         }
         return $element;
     }

@@ -52,14 +52,14 @@ class SimpleIpn extends SimpleBase
         "COMPLETE",             //IDN
         "REFUND",               //IRN
         "PAYMENT_RECEIVED",     //WIRE
-     );
+    );
 
     /**
      * Constructor of SimpleIpn class
-     * 
+     *
      * @param mixed  $config   Configuration array or filename
      * @param string $currency Transaction currency
-     * 
+     *
      * @return void
      *
      */
@@ -71,18 +71,24 @@ class SimpleIpn extends SimpleBase
             $this->debug = $this->debug_ipn;
         }
     }
-        
+
     /**
      * Validate recceived data against HMAC HASH
      *
      * @return boolean
-     * 
+     *
      */
     public function validateReceived()
-    {        
+    {
         $this->debugMessage[] = 'IPN VALIDATION: START';
-        $this->logFunc("IPN", $this->postData, $this->postData['REFNOEXT']);
-        if (!in_array(trim($this->postData['ORDERSTATUS']), $this->successfulStatus)) {  
+        if (!$this->ipnPostDataCheck()) {
+            $this->debugMessage[] = 'IPN VALIDATION: END';
+            return false;
+        }
+
+        //'ORDERSTATUS'
+        $this->logFunc("IPN", $this->postData, @$this->postData['REFNOEXT']);
+        if (!in_array(trim($this->postData['ORDERSTATUS']), $this->successfulStatus)) {
             $this->errorMessage[] = 'INVALID IPN ORDER STATUS: ' . $this->postData['ORDERSTATUS'];
             $this->debugMessage[] = 'IPN VALIDATION: END';
             return false;
@@ -94,43 +100,64 @@ class SimpleIpn extends SimpleBase
         }
         if ($validationResult) {
             $this->debugMessage[] = 'IPN VALIDATION: ' . 'SUCCESSFUL';
-            $this->debugMessage[] = 'IPN CALCULATED HASH: ' . $calculatedHashString;    
+            $this->debugMessage[] = 'IPN CALCULATED HASH: ' . $calculatedHashString;
             $this->debugMessage[] = 'IPN HASH: ' . $this->postData['HASH'];
             $this->debugMessage[] = 'IPN VALIDATION: END';
-            return true;            
+            return true;
         } elseif (!$validationResult) {
             $this->errorMessage[] = 'IPN VALIDATION: ' . 'FAILED';
-            $this->errorMessage[] = 'IPN CALCULATED HASH: ' . $calculatedHashString;    
+            $this->errorMessage[] = 'IPN CALCULATED HASH: ' . $calculatedHashString;
             $this->errorMessage[] = 'IPN RECEIVED HASH: ' . $this->postData['HASH'];
-            $this->debugMessage[] = 'IPN VALIDATION: END';            
+            $this->debugMessage[] = 'IPN VALIDATION: END';
             return false;
         }
         return false;
     }
-    
+
     /**
      * Creates INLINE string for corfirmation
-     * 
+     *
      * @return string $string <EPAYMENT> tag
      *
      */
     public function confirmReceived()
     {
         $this->debugMessage[] = 'IPN CONFIRM: START';
-        $serverDate = date("YmdHis");
+        if (!$this->ipnPostDataCheck()) {
+            $this->debugMessage[] = 'IPN CONFIRM: END';
+            return false;
+        }
+
+        $serverDate = @date("YmdHis");
         $hashArray = array(
             $this->postData['IPN_PID'][0],
             $this->postData['IPN_PNAME'][0],
             $this->postData['IPN_DATE'],
             $serverDate
         );
-        $hash = $this->createHashString($hashArray);       
-        $string = "<EPAYMENT>" . $serverDate . "|" . $hash . "</EPAYMENT>";               
+        $hash = $this->createHashString($hashArray);
+        $string = "<EPAYMENT>" . $serverDate . "|" . $hash . "</EPAYMENT>";
         $this->debugMessage[] = 'IPN CONFIRM EPAYMENT: ' . $string;
-        $this->debugMessage[] = 'IPN CONFIRM: END';       
+        $this->debugMessage[] = 'IPN CONFIRM: END';
         if ($this->echo) {
             echo $string;
         }
         return $string;
+    }
+
+    /**
+     * Check post data if contains REFNOEXT variable
+     *
+     * @return boolean
+     *
+     */
+    protected function ipnPostDataCheck()
+    {
+        if (count($this->postData) < 1 || !array_key_exists('REFNOEXT', $this->postData)) {
+            $this->debugMessage[] = 'IPN POST: MISSING CONTENT';
+            $this->errorMessage[] = 'IPN POST: MISSING CONTENT';
+            return false;
+        }
+        return true;
     }
 }
