@@ -4,7 +4,7 @@
 
 This is the OTP Simple Pamyent SDK. 
 
-Version: 1.0.7
+Version: 1.1.0
 
 You can find more info: https://www.simplepay.hu/fejlesztoknek
 
