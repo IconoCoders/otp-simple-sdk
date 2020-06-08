@@ -16,25 +16,25 @@
  *
  *  You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  * @category  SDK
  * @package   SimplePay_SDK
  * @author    SimplePay IT <itsupport@otpmobil.com>
- * @copyright 2016 OTP Mobil Kft. 
+ * @copyright 2016 OTP Mobil Kft.
  * @license   http://www.gnu.org/licenses/gpl-3.0.html  GNU GENERAL PUBLIC LICENSE (GPL V3.0)
  * @version   1.0
  * @link      http://simplepartner.hu/online_fizetesi_szolgaltatas.html
- * 
+ *
  */
 
-namespace Iconocoders\OtpSimpleSdk\Source;
+namespace Source\V1;
 
-use Iconocoders\OtpSimpleSdk\Source\SimpleTransaction;
+use Source\V1\SimpleTransaction;
 
 /**
- * SimplePay Instant Delivery Information
+ * SimplePay Instant Refund Notification
  *
- * Sends delivery notification via HTTP
+ * Sends Refund request via HTTP request
  *
  * @category SDK
  * @package  SimplePay_SDK
@@ -43,30 +43,31 @@ use Iconocoders\OtpSimpleSdk\Source\SimpleTransaction;
  * @link     http://simplepartner.hu/online_fizetesi_szolgaltatas.html
  *
  */
-class SimpleIdn extends SimpleTransaction
+class SimpleIrn extends SimpleTransaction
 {
     public $targetUrl = '';
-    public $commMethod = 'idn';
-    public $idnRequest = array();
+    public $commMethod = 'irn';
+    public $irnRequest = array();
     public $hashFields = array(
         "MERCHANT",
         "ORDER_REF",
         "ORDER_AMOUNT",
         "ORDER_CURRENCY",
-        "IDN_DATE"
+        "IRN_DATE",
+        "AMOUNT"
     );
 
     protected $validFields = array(
-        "MERCHANT" => array("type"=>"single", "paramName"=>"merchantId", "required" => true),
-        "ORDER_REF" => array("type"=>"single", "paramName"=>"orderRef", "required"=>true),
-        "ORDER_AMOUNT" => array("type"=>"single", "paramName"=>"amount", "required"=>true),
-        "ORDER_CURRENCY" => array("type"=>"single", "paramName"=>"currency", "required"=>true),
-        "IDN_DATE" => array("type"=>"single", "paramName"=>"idnDate", "required"=>true),
-        "REF_URL" => array("type"=>"single", "paramName"=>"refUrl"),
+        "MERCHANT" => array("type" => "single", "paramName" => "merchantId", "required" => true),
+        "ORDER_REF" => array("type" => "single", "paramName" => "orderRef", "required" => true),
+        "ORDER_AMOUNT" => array("type" => "single", "paramName" => "amount", "required" => true),
+        "AMOUNT" => array("type" => "single", "paramName" => "amount", "required" => true),
+        "ORDER_CURRENCY" => array("type" => "single", "paramName" => "currency", "required" => true),
+        "IRN_DATE" => array("type" => "single", "paramName" => "irnDate", "required" => true),
     );
 
     /**
-     * Constructor of SimpleIdn class
+     * Constructor of SimpleIrn class
      *
      * @param mixed  $config   Configuration array or filename
      * @param string $currency Transaction currency
@@ -78,11 +79,11 @@ class SimpleIdn extends SimpleTransaction
     {
         $config = $this->merchantByCurrency($config, $currency);
         $this->setup($config);
-        if (isset($this->debug_idn)) {
-            $this->debug = $this->debug_idn;
+        if (isset($this->debug_irn)) {
+            $this->debug = $this->debug_irn;
         }
         $this->fieldData['MERCHANT'] = $this->merchantId;
-        $this->targetUrl = $this->defaultsData['BASE_URL'] . $this->defaultsData['IDN_URL'];
+        $this->targetUrl = $this->defaultsData['BASE_URL'] . $this->defaultsData['IRN_URL'];
     }
 
     /**
@@ -99,7 +100,7 @@ class SimpleIdn extends SimpleTransaction
             "ORDER_REF" => (isset($data[0])) ? $data[0] : 'N/A',
             "RESPONSE_CODE" => (isset($data[1])) ? $data[1] : 'N/A',
             "RESPONSE_MSG" => (isset($data[2])) ? $data[2] : 'N/A',
-            "IDN_DATE" => (isset($data[3])) ? $data[3] : 'N/A',
+            "IRN_DATE" => (isset($data[3])) ? $data[3] : 'N/A',
             "ORDER_HASH" => (isset($data[4])) ? $data[4] : 'N/A',
         );
     }
@@ -107,15 +108,15 @@ class SimpleIdn extends SimpleTransaction
     /**
      * Sends notification via cURL
      *
-     * @param array $data Data array to be sent
+     * @param array $data (Optional) Data array to be sent
      *
      * @return array $this->nameData() Result
      *
      */
-    public function requestIdn($data = array())
+    public function requestIrn($data = array())
     {
         if (count($data) == 0) {
-            $this->errorMessage[] = 'IDN DATA: EMPTY';
+            $this->errorMessage[] = 'IRN DATA: EMPTY';
             return $this->nameData();
         }
         $data['MERCHANT'] = $this->merchantId;
@@ -127,18 +128,18 @@ class SimpleIdn extends SimpleTransaction
         }
         $irnHash = $this->createHashString($data2);
         $data2['ORDER_HASH'] = $irnHash;
-        $this->idnRequest = $data2;
-        $this->logFunc("IDN", $this->idnRequest, $this->refnoext);
+        $this->irnRequest = $data2;
+        $this->logFunc("IRN", $this->irnRequest, $this->refnoext);
 
-        $result = $this->startRequest($this->targetUrl, $this->idnRequest, 'POST');
-        $this->debugMessage[] = 'IDN RESULT: ' . $result;
+        $result = $this->startRequest($this->targetUrl, $this->irnRequest, 'POST');
+        $this->debugMessage[] = 'IRN RESULT: ' . $result;
 
         if (is_string($result)) {
             $processed = $this->processResponse($result);
-            $this->logFunc("IDN", $processed, $this->refnoext);
-            return     $processed;
+            $this->logFunc("IRN", $processed, $this->refnoext);
+            return $processed;
         }
-        $this->debugMessage[] = 'IDN RESULT: NOT STRING';
+        $this->debugMessage[] = 'IRN RESULT: NOT STRING';
         return false;
     }
 }

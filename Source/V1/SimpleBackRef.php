@@ -16,24 +16,24 @@
  *
  *  You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  * @category  SDK
  * @package   SimplePay_SDK
  * @author    SimplePay IT <itsupport@otpmobil.com>
- * @copyright 2016 OTP Mobil Kft. 
+ * @copyright 2016 OTP Mobil Kft.
  * @license   http://www.gnu.org/licenses/gpl-3.0.html  GNU GENERAL PUBLIC LICENSE (GPL V3.0)
  * @version   1.0
  * @link      http://simplepartner.hu/online_fizetesi_szolgaltatas.html
- * 
+ *
  */
 
-namespace Iconocoders\OtpSimpleSdk\Source;
+namespace Source\V1;
 
-use Iconocoders\OtpSimpleSdk\Source\SimpleTransaction;
+use Source\V1\SimpleTransaction;
 
 /**
  * SimplePay BACK_REF
- * 
+ *
  * Processes information sent via HTTP GET on the returning site after a payment
  *
  * @category SDK
@@ -69,7 +69,7 @@ class SimpleBackRef extends SimpleTransaction
         "IN_PROGRESS",          //card authorized on backref
         "PAYMENT_AUTHORIZED",   //IPN
         "COMPLETE",             //IDN
-        "WAITING_PAYMENT",      //waiting for WIRE 
+        "WAITING_PAYMENT",      //waiting for WIRE
     );
     public $unsuccessfulStatus = array(
         "CARD_NOTAUTHORIZED",   //unsuccessful transaction

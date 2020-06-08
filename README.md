@@ -1,10 +1,9 @@
-# OTP Simple SDK
+# OTP Simplepay SDK
 
-![](https://s3.amazonaws.com/assets-github/repo/progcode/img/otp_simple.png)
+![](https://simplepay.hu/wp-content/uploads/2019/09/simpleLogo-e1569844953356.png)
 
-This is the OTP Simple Pamyent SDK. 
-
-Version: 1.1.0
+Version: 2.0.0
+Support V1 & V2 API versions
 
 You can find more info: https://www.simplepay.hu/fejlesztoknek
 
