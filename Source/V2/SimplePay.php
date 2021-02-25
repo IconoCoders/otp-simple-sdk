@@ -693,7 +693,7 @@ class SimplePayIpn extends Base
             header('Content-type: application/json');
             header('Signature: ' . $this->ipnReturnData['signature']);
             print $this->ipnReturnData['confirmContent'];
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->writeLog(['ipnConfirm' => $e->getMessage()]);
             return false;
         }
@@ -906,14 +906,14 @@ trait Signature
         try {
             if ($this->phpVersion === 7) {
                 if (!hash_equals($this->config['computedSignature'], $signatureToCheck)) {
-                    throw new Exception('fail');
+                    throw new \Exception('fail');
                 }
             } elseif ($this->phpVersion === 5) {
                 if ($this->config['computedSignature'] !== $signatureToCheck) {
-                    throw new Exception('fail');
+                    throw new \Exception('fail');
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->logContent['hashCheckResult'] = $e->getMessage();
             return false;
         }
@@ -983,9 +983,9 @@ trait Communication
         $this->curlInfo = curl_getinfo($curlData);
         try {
             if (curl_errno($curlData)) {
-                throw new Exception(curl_error($curlData));
+                throw new \Exception(curl_error($curlData));
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->logContent['runCommunicationException'] = $e->getMessage();
         }
         curl_close($curlData);
@@ -1112,15 +1112,15 @@ trait Logger
         try {
             if (!is_writable($this->config['logPath'])) {
                 $write = false;
-                throw new Exception('Folder is not writable: ' . $this->config['logPath']);
+                throw new \Exception('Folder is not writable: ' . $this->config['logPath']);
             }
             if (file_exists($logFile)) {
                 if (!is_writable($logFile)) {
                     $write = false;
-                    throw new Exception('File is not writable: ' . $logFile);
+                    throw new \Exception('File is not writable: ' . $logFile);
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->logContent['logFile'] = $e->getMessage();
         }
 
@@ -1187,9 +1187,9 @@ trait Logger
     {
         try {
             if (!file_put_contents($logFile, $logText, FILE_APPEND | LOCK_EX)) {
-                throw new Exception('Log write error');
+                throw new \Exception('Log write error');
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->logContent['logToFile'] = $e->getMessage();
         }
         unset($logFile, $logText);
