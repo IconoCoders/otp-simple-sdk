@@ -1,30 +1,30 @@
 {
-    "name": "iconocoders/otp-simple-sdk",
-    "description": "OTP Simple Payment SDK",
-    "keywords": [
-        "otp simple",
-        "iconocoders",
-        "online payment",
-        "payment"
-    ],
-    "authors": [
-        {
-            "name": "Iconocoders",
-            "email": "support@icoders.co"
-        }
-    ],
-    "minimum-stability": "dev",
-     "require": {
- 	"php": "~7.2.0|~7.3.0|~7.4.0"
-    },
-    "type": "library",
-    "version": "2.1.0",
-    "license": [
-	"Apache-2.0"
-    ],
-    "autoload": {
-        "psr-4": {
-            "Source\\": "Source/"
-        }
+  "name": "iconocoders/otp-simple-sdk",
+  "description": "OTP Simple Payment SDK",
+  "keywords": [
+    "otp simple",
+    "iconocoders",
+    "online payment",
+    "payment"
+  ],
+  "authors": [
+    {
+      "name": "Iconocoders",
+      "email": "support@icoders.co"
     }
+  ],
+  "minimum-stability": "dev",
+  "require": {
+    "php": "~7.2.0|~7.3.0|~7.4.0"
+  },
+  "type": "library",
+  "version": "2.2.0",
+  "license": [
+    "Apache-2.0"
+  ],
+  "autoload": {
+    "psr-4": {
+      "Simplepay\\": "Simplepay/"
+    }
+  }
 }

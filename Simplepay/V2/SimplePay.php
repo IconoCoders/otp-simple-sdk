@@ -1,5 +1,7 @@
 <?php
 
+namespace Simplepay\V2;
+
 /**
  *  Copyright (C) 2020 OTP Mobil Kft.
  *
