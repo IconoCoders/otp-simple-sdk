@@ -77,11 +77,6 @@ class Base
         $ver = (float)phpversion();
         $this->logContent['phpVersion'] = $ver;
         if (is_numeric($ver)) {
-
-            if ($ver >= 8.0) {
-                $this->phpVersion = 8;
-            }
-
             if ($ver < 7.0) {
                 $this->phpVersion = 5;
             }
@@ -910,7 +905,7 @@ trait Signature
         $this->logContent['signatureToCheck'] = $signatureToCheck;
         $this->logContent['computedSignature'] = $this->config['computedSignature'];
         try {
-            if ($this->phpVersion === 7 || $this->phpversion === 8) {
+            if ($this->phpVersion === 7) {
                 if (!hash_equals($this->config['computedSignature'], $signatureToCheck)) {
                     throw new \Exception('fail');
                 }
